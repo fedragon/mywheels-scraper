@@ -33,7 +33,7 @@ def get_invoices(page) -> list[Invoice]:
             Invoice(
                 number=number,
                 issue_date=issue_date,
-                amount=amount
+                amount=amount.replace(",", ".")
             )
         )
     return invoices
@@ -71,5 +71,10 @@ def test_download_invoices():
 
         with open("invoices.json", "w") as f:
             f.write(json.dumps(all_invoices, indent=2, default=to_jsonable_python))
+
+        with open("invoices.csv", "w") as f:
+            f.write("number,date,amount\n")
+            for invoice in all_invoices:
+                f.write(f"{invoice.number},{invoice.issue_date.strftime("%Y-%m-%d")},{invoice.amount.strip("€ ")}\n")
 
         browser.close()
