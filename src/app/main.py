@@ -71,13 +71,18 @@ def _find_invoices_in(page: Page) -> list[Invoice]:
 
 
 def _download_invoices(conn):
+    cursor = conn.cursor()
+    last_invoice = cursor.execute("SELECT MAX(number) FROM invoices").fetchone()
+    last_invoice_number = None
+    if last_invoice is not None:
+        last_invoice_number = last_invoice[0]
+
     with sync_playwright() as p:
         browser = p.chromium.connect_over_cdp("http://localhost:9222")
         default_context = browser.contexts[0]
         page = default_context.pages[0]
         page.set_default_timeout(10000)
         page.goto("https://mywheels.nl/mijn/financien", timeout=10000)
-        print("")
 
         list_selector = "div.mb-12:nth-child(2) > div:nth-child(1) > ul:nth-child(3)"
         page.wait_for_selector(list_selector, timeout=5000)
@@ -89,8 +94,11 @@ def _download_invoices(conn):
         print(f"{last} pages to download")
 
         invoices: list[Invoice] = _find_invoices_in(page)
-        cursor = conn.cursor()
         for i in invoices:
+            if last_invoice_number is not None and i.number == last_invoice_number:
+                print(f"invoices prior to #{last_invoice_number} (included) have already been stored. skipping.")
+                return
+
             cursor.execute(
                 "INSERT INTO invoices (number, issue_date, currency, amount_cents) VALUES (?, ?, ?, ?)",
                 [
@@ -156,14 +164,15 @@ if __name__ == "__main__":
     )
     parser.add_argument("--download", type=bool)
     parser.add_argument("--export", type=str, nargs="*", choices=["csv", "json"])
-    args=parser.parse_args()
-    args.export = set(args.export)
-    print(args.export)
+    args = parser.parse_args()
+    if args.export:
+        args.export = set(args.export)
 
     with _prepare_db() as conn:
         if args.download:
-          _download_invoices(conn)
-        if "csv" in args.export:
-          _to_csv(conn)
-        if "json" in args.export:
-          _to_json(conn)
+            _download_invoices(conn)
+        if args.export:
+            if "csv" in args.export:
+                _to_csv(conn)
+            if "json" in args.export:
+                _to_json(conn)

@@ -1,6 +1,6 @@
 # Mywheels scraper
 
-Small utility to collect my invoices' history from the [MyWheels website](https://mywheels.nl).
+Small utility to collect my invoices' history from the [MyWheels website](https://mywheels.nl) for further analysis. It stores them to a local sqlite3 database and can export them to CSV and JSON.
 
 ## Run
 
@@ -15,5 +15,5 @@ Small utility to collect my invoices' history from the [MyWheels website](https:
 3. Run
 
 ```
-uv run -- pytest -s --headed --browser chromium test_invoice_history.py
+uv run src/app/main.py --download 1 -- export csv json
 ```
