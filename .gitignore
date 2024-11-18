@@ -9,5 +9,11 @@ wheels/
 # Virtual environments
 .venv
 
+# sample files
+*.pdf
+
+# sqlite3 db file
+*.db
+
 # output files
 invoices.*
