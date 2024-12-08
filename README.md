@@ -17,5 +17,5 @@ This small utility collects my invoices' history from the [MyWheels website](htt
 3. Run
 
 ```
-uv run src/app/main.py --download 1 -- export csv json
+uv run src/app/main.py --download 1 --export csv json
 ```

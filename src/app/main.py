@@ -39,26 +39,24 @@ def _find_invoices_in(page: Page) -> list[Invoice]:
 
     invoices: list[Invoice] = []
     for row in page.locator(f"{table_selector} > tr").all():
-        for col in row.locator("td").all():
-            for text in col.all_inner_texts():
-                values = text.split("\n")
-                if len(values) == 2:
-                    if values[0] == "#":
-                        number = int(values[1])
-                    elif values[0] == "Factuurdatum":
-                        issue_date = datetime.strptime(values[1], "%d-%m-%Y").date()
-                    elif values[0] == "Totaalbedrag":
-                        parts = values[1].split(" ")
-                        if len(parts) == 2:
-                            currency = parts[0]
-                            amount_cents = int(float(parts[1].replace(",", ".")) * 100)
-                        elif len(parts) == 3:
-                            currency = parts[1]
-                            amount_cents = (
-                                int(float(parts[2].replace(",", ".")) * 100) * -1
-                            )
-                        else:
-                            raise ValueError(f"don't know how to handle this: {parts}")
+        for ix, col in enumerate(row.locator("td").all()):
+            text = col.inner_text()
+            if ix == 0:
+                number = int(text)
+            elif ix == 1:
+                issue_date = datetime.strptime(text, "%d-%m-%Y").date()
+            elif ix == 2:
+                parts = text.split(" ")
+                if len(parts) == 2:
+                    currency = parts[0]
+                    amount_cents = int(float(parts[1].replace(",", ".")) * 100)
+                elif len(parts) == 3:
+                    currency = parts[1]
+                    amount_cents = (
+                        int(float(parts[2].replace(",", ".")) * 100) * -1
+                    )
+                else:
+                    raise ValueError(f"don't know how to handle this: {parts}")
         invoices.append(
             Invoice(
                 number=number,
